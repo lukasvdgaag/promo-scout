@@ -15,13 +15,14 @@ PromoScout is a TypeScript-based Discord bot that aggregates promotions and give
 
 ## Supported sites
 
-<img alt="Talpa" height="48" src="docs/img/staatsloterij-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/talpa-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/skyradio-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/radio10-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/radio538-icon.png" width="48"/>
+<img alt="Talpa" height="48" src="docs/img/staatsloterij-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/talpa-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/skyradio-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/radio10-icon.png" width="48"/> <img alt="Talpa" height="48" src="docs/img/radio538-icon.png" width="48"/> <img alt="Coca-Cola" height="48" src="https://images.seeklogo.com/logo-png/3/1/coca-cola-logo-png_seeklogo-32896.png">
 
 - Staatsloterij
 - Talpa Network Television (SBS6, NET5 and related channels)
 - SkyRadio
 - Radio10
 - Radio538
+- Coca-Cola
 
 ## Setup
 
