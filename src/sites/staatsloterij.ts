@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import {SiteDefinition, SiteId} from '../type/types';
+import {ScrapeResponse, SiteDefinition, SiteId} from '../type/types';
 
 export const staatsloterij: SiteDefinition = {
     id: SiteId.STAATSLOTERIJ,
@@ -7,9 +7,10 @@ export const staatsloterij: SiteDefinition = {
     baseUrl: 'https://staatsloterij.nederlandseloterij.nl',
     promotionsPath: 'acties',
     color: 0xFF6601,
-    scrape(html: string) {
+    logoUrl: 'https://cdn.aptoide.com/imgs/7/5/3/753876c1018f55f7edec883675d9b054_icon.png',
+    scrape: async (html: string) => {
         const $ = cheerio.load(html);
-        const promotions: ReturnType<SiteDefinition['scrape']> = [];
+        const promotions: ScrapeResponse = [];
 
         const promotionCards = $('main section').eq(1).find('> div').children();
 

@@ -20,7 +20,7 @@ const scrapeSite = async (site: SiteDefinition): Promise<ScrapeResult> => {
         }
 
         const html = await response.text();
-        const rawPromotions = site.scrape(html);
+        const rawPromotions = await site.scrape(html);
 
         return {
             ok: true,

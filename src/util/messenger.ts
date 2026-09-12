@@ -39,6 +39,8 @@ export const sendDiscordNotification = async (
         const payload = {
             content: '',
             embeds: [embed],
+            username: `${site.name} Acties`,
+            avatar_url: site.logoUrl,
             components,
         };
 
