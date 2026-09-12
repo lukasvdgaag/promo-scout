@@ -25,8 +25,9 @@ export interface SiteDefinition {
     baseUrl: string;
     promotionsPath: string;
     color: number;
+    logoUrl: string;
 
-    scrape(html: string): Omit<Promotion, 'id' | 'source' | 'scrapedAt'>[];
+    scrape(html: string): Promise<ScrapeResponse>;
 }
 
 export interface Cache {
@@ -44,3 +45,5 @@ export interface Config {
     cacheFile: string;
     checkInterval: number;
 }
+
+export type ScrapeResponse = Omit<Promotion, 'id' | 'source' | 'scrapedAt'>[]
