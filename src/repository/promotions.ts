@@ -14,7 +14,7 @@ const scrapeSite = async (site: SiteDefinition): Promise<ScrapeResult> => {
         const promotionsPath = `${site.baseUrl}/${site.promotionsPath}`;
         console.log(`[${site.name}] Fetching promotions from ${promotionsPath}...`);
 
-        const response = await fetch(promotionsPath);
+        const response = await fetch(promotionsPath, {headers: site.fetchHeaders});
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

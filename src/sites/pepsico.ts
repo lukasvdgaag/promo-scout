@@ -15,6 +15,11 @@ export const pepsiCo: SiteDefinition = {
     promotionsPath: 'nl-nl/acties',
     color: 0x004B93,
     logoUrl: 'https://www.joy-pepsico.eu/themes/custom/barrio_pepsico_joypepsico/assets/images/footer-logo-UK.png',
+    fetchHeaders: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
+    },
     scrape: async (html: string): Promise<ScrapeResponse> => {
         const $ = cheerio.load(html);
         const seen = new Set<string>();

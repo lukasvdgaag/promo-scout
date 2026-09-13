@@ -28,6 +28,7 @@ export interface SiteDefinition {
     promotionsPath: string;
     color: number;
     logoUrl: string;
+    fetchHeaders?: Record<string, string>;
 
     scrape(html: string): Promise<ScrapeResponse>;
 }
