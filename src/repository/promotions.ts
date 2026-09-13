@@ -26,6 +26,10 @@ const scrapeSite = async (site: SiteDefinition): Promise<ScrapeResult> => {
         }
         const rawPromotions = await site.scrape(html);
 
+        if (rawPromotions.length === 0) {
+            console.warn(`[${site.name}] Scrape returned 0 promotions. Response snippet:\n${html.slice(0, 1000)}`);
+        }
+
         return {
             ok: true,
             promotions: rawPromotions.map(p => ({
