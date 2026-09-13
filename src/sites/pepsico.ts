@@ -1,27 +1,18 @@
 import * as cheerio from 'cheerio';
+import {execFile} from 'child_process';
+import {mkdtempSync, rmSync} from 'fs';
+import {join} from 'path';
+import {tmpdir} from 'os';
+import {promisify} from 'util';
 import {ScrapeResponse, SiteDefinition, SiteId} from '../type/types';
 
-const BASE_URL = 'https://www.joy-pepsico.eu';
+const execFileAsync = promisify(execFile);
 
-const BROWSER_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
-};
+const BASE_URL = 'https://www.joy-pepsico.eu';
 
 function toAbsolute(url: string): string {
     if (!url) return '';
     return url.startsWith('http') ? url : `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-}
-
-// Extracts cookies from a response into a Cookie header value string.
-// Uses getSetCookie() (Node 18.14+/undici) and falls back to get('set-cookie').
-function extractCookies(response: Response): string {
-    const setCookies: string[] =
-        typeof (response.headers as any).getSetCookie === 'function'
-            ? (response.headers as any).getSetCookie()
-            : (response.headers.get('set-cookie') ?? '').split(/,(?=[^ ])/);
-    return setCookies.map(c => c.split(';')[0]).filter(Boolean).join('; ');
 }
 
 export const pepsiCo: SiteDefinition = {
@@ -31,19 +22,28 @@ export const pepsiCo: SiteDefinition = {
     promotionsPath: 'nl-nl/acties',
     color: 0x004B93,
     logoUrl: 'https://www.joy-pepsico.eu/themes/custom/barrio_pepsico_joypepsico/assets/images/footer-logo-UK.png',
-    // Imperva/Incapsula sets session cookies on the first response that must be
-    // echoed back, which plain fetch never does. We do an explicit two-request
-    // handshake so the second request carries the cookies and gets through.
+    // Node.js's undici has a known TLS fingerprint (JA3/JA4) that Imperva's
+    // bot detection blocks on VPS IPs. Shelling out to curl bypasses this
+    // because curl has a different TLS handshake. The cookie jar (-c/-b) handles
+    // Imperva's session cookie challenge transparently across redirects.
     fetchHtml: async (url: string): Promise<string> => {
-        const res1 = await fetch(url, {headers: BROWSER_HEADERS});
-        const cookies = extractCookies(res1);
-
-        const headers: Record<string, string> = {...BROWSER_HEADERS};
-        if (cookies) headers['Cookie'] = cookies;
-
-        const res2 = await fetch(url, {headers});
-        if (!res2.ok) throw new Error(`HTTP error! status: ${res2.status}`);
-        return res2.text();
+        const tmpDir = mkdtempSync(join(tmpdir(), 'pepsico-'));
+        try {
+            const cookieJar = join(tmpDir, 'cookies.txt');
+            const {stdout} = await execFileAsync('curl', [
+                '-s', '-L',
+                '-c', cookieJar,
+                '-b', cookieJar,
+                '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+                '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                '-H', 'Accept-Language: nl-NL,nl;q=0.9,en;q=0.8',
+                url,
+            ], {maxBuffer: 10 * 1024 * 1024});
+            if (!stdout) throw new Error('curl returned empty response');
+            return stdout;
+        } finally {
+            rmSync(tmpDir, {recursive: true, force: true});
+        }
     },
     scrape: async (html: string): Promise<ScrapeResponse> => {
         const $ = cheerio.load(html);
