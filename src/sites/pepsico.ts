@@ -1,12 +1,6 @@
 import * as cheerio from 'cheerio';
-import {execFile} from 'child_process';
-import {mkdtempSync, rmSync} from 'fs';
-import {join} from 'path';
-import {tmpdir} from 'os';
-import {promisify} from 'util';
+import {chromium} from 'playwright';
 import {ScrapeResponse, SiteDefinition, SiteId} from '../type/types';
-
-const execFileAsync = promisify(execFile);
 
 const BASE_URL = 'https://www.joy-pepsico.eu';
 
@@ -22,27 +16,24 @@ export const pepsiCo: SiteDefinition = {
     promotionsPath: 'nl-nl/acties',
     color: 0x004B93,
     logoUrl: 'https://www.joy-pepsico.eu/themes/custom/barrio_pepsico_joypepsico/assets/images/footer-logo-UK.png',
-    // Node.js's undici has a known TLS fingerprint (JA3/JA4) that Imperva's
-    // bot detection blocks on VPS IPs. Shelling out to curl bypasses this
-    // because curl has a different TLS handshake. The cookie jar (-c/-b) handles
-    // Imperva's session cookie challenge transparently across redirects.
+    // Imperva Incapsula serves a JavaScript challenge that only a real browser can solve.
+    // Playwright runs headless Chromium which executes the challenge and receives the actual page.
     fetchHtml: async (url: string): Promise<string> => {
-        const tmpDir = mkdtempSync(join(tmpdir(), 'pepsico-'));
+        const browser = await chromium.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        });
         try {
-            const cookieJar = join(tmpDir, 'cookies.txt');
-            const {stdout} = await execFileAsync('curl', [
-                '-s', '-L', '--compressed',
-                '-c', cookieJar,
-                '-b', cookieJar,
-                '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-                '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                '-H', 'Accept-Language: nl-NL,nl;q=0.9,en;q=0.8',
-                url,
-            ], {maxBuffer: 10 * 1024 * 1024});
-            if (!stdout) throw new Error('curl returned empty response');
-            return stdout;
+            const context = await browser.newContext({
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+                locale: 'nl-NL',
+                extraHTTPHeaders: {'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8'},
+            });
+            const page = await context.newPage();
+            await page.goto(url, {waitUntil: 'networkidle', timeout: 30000});
+            return await page.content();
         } finally {
-            rmSync(tmpDir, {recursive: true, force: true});
+            await browser.close();
         }
     },
     scrape: async (html: string): Promise<ScrapeResponse> => {
