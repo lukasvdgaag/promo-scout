@@ -7,6 +7,7 @@ export enum SiteId {
     RADIO10 = 'radio10',
     RADIO538 = 'radio538',
     COCA_COLA = 'coca_cola',
+    PEPSI_CO = 'pepsi_co',
 }
 
 export interface Promotion {
