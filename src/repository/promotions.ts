@@ -14,12 +14,16 @@ const scrapeSite = async (site: SiteDefinition): Promise<ScrapeResult> => {
         const promotionsPath = `${site.baseUrl}/${site.promotionsPath}`;
         console.log(`[${site.name}] Fetching promotions from ${promotionsPath}...`);
 
-        const response = await fetch(promotionsPath, {headers: site.fetchHeaders});
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        let html: string;
+        if (site.fetchHtml) {
+            html = await site.fetchHtml(promotionsPath);
+        } else {
+            const response = await fetch(promotionsPath, {headers: site.fetchHeaders});
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            html = await response.text();
         }
-
-        const html = await response.text();
         const rawPromotions = await site.scrape(html);
 
         return {

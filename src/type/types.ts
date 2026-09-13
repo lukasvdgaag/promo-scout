@@ -29,6 +29,7 @@ export interface SiteDefinition {
     color: number;
     logoUrl: string;
     fetchHeaders?: Record<string, string>;
+    fetchHtml?(url: string): Promise<string>;
 
     scrape(html: string): Promise<ScrapeResponse>;
 }
